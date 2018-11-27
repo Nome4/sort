@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Testes</title>
+    <style>
+body{
+  margin:48px 60px;
+}
+h1{
+  margin-bottom: 1em;
+}
+
+table{
+  border-collapse: collapse;
+}
+td:not(:first-child),tr:first-child>th{
+  padding:0.5rem 1rem;
+  text-align: center;
+}
+td:not(:first-child){
+  font-family: sans-serif;
+  font-size: 1.25em;
+  -webkit-text-stroke:1px rgba(0,0,0,0.1);
+  -moz-text-stroke:1px rgba(0,0,0,0.1);
+}
+tr:first-child>th{
+  font-size: 1.5em;
+}
+td:first-child{
+  padding: 0;
+}
+tr:not(:first-child)>*,tr:first-child>:not(:first-child){
+  border:1px solid black;
+}
+
+textarea[readonly]{
+  box-sizing: content-box;
+  font-size: 1rem;
+  width:20em;
+  height: 18em;
+  line-height: 1.2;
+  padding:0.5rem 1rem;
+  display: block;
+  resize: vertical;
+  outline: none;
+  border:0;
+  background-color: #efefef;
+}
+    </style>
+  </head>
+  <body>
+    <h1>Formas de ordenar vetor</h1>
+    <table><tbody>
+      <th></th>
+      <th>10</th>
+      <th>100</th>
+      <th>1000</th>
+    </tbody></table>
+    <script>
+let n,l=0;
+let v;
+let tab=[],tabelao=document.querySelector("tbody");
+const formas=8;
+for(let i=0; i<formas; i++){
+  tabelao.innerHTML+="<tr><td><textarea readonly></textarea></td><td></td><td></td><td></td></tr>";
+}
+for(let i=0; i<formas; i++){
+  tab[i]=document.querySelectorAll("tr:nth-child("+(i+2)+")>td:not(:first-child)");
+}
+let thsPre=document.querySelectorAll("tr:not(:first-child)>td:first-child>textarea");
+const cols=tab[0].length;
+
+function testVetor(f){
+  str=String(f);
+  thsPre[l].innerHTML=str.slice(12,str.length-2);
+  for(let h=0; h<cols; h++){
+    n=10*Math.pow(10,h);
+    const ct=100000/n;
+    let soma=0;
+    for(let i=0; i<ct; i++){
+      v=[];
+      for(let i=0; i<n; i++){
+        v[i]=Math.random();
+      }
+      let ini=performance.now();
+      f();
+      soma+=performance.now()-ini;
+    }
+    tab[l][h].innerHTML=(soma/ct).toFixed(5);
+  }
+  l++;
+}
+
+onload=function(){
+
+testVetor(function(){
+// Bubble Sort
+
+for(let i=0; i<n-1; i++){
+  for(let j=i+1; j<n; j++){
+    if(v[j]<v[i]){
+      let aux=v[i];
+      v[i]=v[j];
+      v[j]=aux;
+    }
+    // Obs: Colocar uma condição para parar se o vetor já estiver ordenado na verdade deixa mais lento!
+  }
+}
+});
+
+
+testVetor(function(){
+// Select sort
+
+for(let i=0; i<n-1; i++){
+  let menor=v[i],indMenor=i;
+  for(let j=i+1; j<n; j++){
+    if(v[j]<menor){
+      menor=v[j];
+      indMenor=j;
+    }
+  }
+  if(indMenor!=i){
+    let aux=menor;
+    v[indMenor]=v[i];
+    v[i]=aux;
+  }
+}
+});
+
+
+testVetor(function(){
+// Sort nativo do JavaScript
+
+v.sort(function(a,b){
+  return a-b;
+});
+});
+
+
+testVetor(function(){
+// Quick Sort (Tirado da Internet)
+
+function quickSort(array,left,right){
+  let pivotIndex = Math.floor( (left + right) / 2);
+  let pivot = array[pivotIndex];
+
+  let leftIndex = left;
+  let rightIndex = right;
+
+  while (leftIndex <= rightIndex){
+    while(array[leftIndex]<pivot){
+      leftIndex++;
+    }
+
+    while(array[rightIndex]>pivot){
+      rightIndex--;
+    }
+
+    if (leftIndex <= rightIndex){
+      let temp = array[leftIndex];
+      array[leftIndex] = array[rightIndex];
+      array[rightIndex] = temp;
+      leftIndex++;
+      rightIndex--;
+    }
+  }
+
+  if (left < leftIndex - 1){
+    quickSort(array,left, leftIndex-1);
+  }
+
+  if (right > leftIndex){
+    quickSort(array,leftIndex, right);
+  }
+}
+
+quickSort(v,0,n-1);
+});
+
+
+testVetor(function(){
+// Insert Sort
+
+let value, i, j;
+for(i = 1; i < n; i++) {
+  value = v[i];
+  j = i - 1;
+  while (j >= 0 && v[j] > value) {
+  v[j+1] = v[j];
+    j--;
+  }
+  v[j+1] = value;
+}
+});
+
+
+testVetor(function(){
+// Merge Sort (Tirado da Internet)
+
+function merge(arr, aux, lo, mid, hi) {
+  let i = lo;
+  let j = mid + 1;
+  let k = lo;
+  while(true){
+    if(arr[i] <= arr[j]){
+      aux[k++] = arr[i++];
+      if(i > mid){
+        do
+          aux[k++] = arr[j++];
+        while(j <= hi);
+        break;
+      }
+    } else {
+      aux[k++] = arr[j++];
+      if(j > hi){
+        do
+          aux[k++] = arr[i++];
+        while(i <= mid);
+        break;
+      }
+    }
+  }
+}
+
+function sortarrtoaux(arr, aux, lo, hi) {
+  if (hi < lo) return;
+  if (hi == lo){
+      aux[lo] = arr[lo];
+      return;
+  }
+  let mid = Math.floor(lo + (hi - lo) / 2);
+  sortarrtoarr(arr, aux, lo, mid);
+  sortarrtoarr(arr, aux, mid + 1, hi);
+  merge(arr, aux, lo, mid, hi);
+}
+
+function sortarrtoarr(arr, aux, lo, hi) {
+  if (hi <= lo) return;
+  let mid = Math.floor(lo + (hi - lo) / 2);
+  sortarrtoaux(arr, aux, lo, mid);
+  sortarrtoaux(arr, aux, mid + 1, hi);
+  merge(aux, arr, lo, mid, hi);
+}
+
+function mergeSort(arr) {
+  let aux = arr.slice(0);
+  sortarrtoarr(arr, aux, 0, arr.length - 1);
+  return arr;
+}
+
+mergeSort(v);
+});
+
+
+testVetor(function(){
+// Shell sort (Internet)
+
+const gaps=[1, 4, 10, 23, 57, 132, 301, 701];
+let g=gaps.length;
+while(g--){
+  for(let i=gaps[g]; i<n; i++){
+    let temp=v[i];
+    let j;
+    for(j=i; j>=gaps[g] && v[j-gaps[g]]>temp; j-=gaps[g]){
+      v[j]=v[j-gaps[g]];
+    }
+    v[j]=temp;
+  }
+}
+});
+
+
+testVetor(function(){
+// Junção dos 2 melhores (Quick e Insert)
+
+function hybridSort(array,left,right){
+  if(right-left>=32){
+    let pivotIndex = Math.floor( (left + right) / 2);
+    let pivot = array[pivotIndex];
+
+    let leftIndex = left;
+    let rightIndex = right;
+
+    while (leftIndex <= rightIndex){
+      while(array[leftIndex]<pivot){
+        leftIndex++;
+      }
+
+      while(array[rightIndex]>pivot){
+        rightIndex--;
+      }
+
+      if (leftIndex <= rightIndex){
+        let temp = array[leftIndex];
+        array[leftIndex] = array[rightIndex];
+        array[rightIndex] = temp;
+        leftIndex++;
+        rightIndex--;
+      }
+    }
+
+    if (left < leftIndex - 1){
+      hybridSort(array,left, leftIndex-1);
+    }
+
+    if (right > leftIndex){
+      hybridSort(array,leftIndex, right);
+    }
+  }
+
+  else{
+    let j;
+    for(; left < right; left++) {
+      value = array[left];
+      j = left - 1;
+      while (j >= 0 && array[j] > value) {
+      array[j+1] = array[j];
+        j--;
+      }
+      array[j+1] = value;
+    }
+  }
+}
+
+hybridSort(v,0,n-1);
+});
+
+
+
+// Corzinhas
+
+for(let i=0; i<cols; i++){
+  let vals=[parseFloat(tab[0][i].innerHTML)];
+  let indMin=0,indMax=0;
+  for(let j=1; j<formas; j++){
+    vals[j]=parseFloat(tab[j][i].innerHTML);
+    if(vals[j]<vals[indMin]) indMin=j;
+    else if(vals[j]>vals[indMax]) indMax=j;
+  }
+
+  let maxGrad=vals[indMin]+vals[indMax];
+  for(let j=0; j<formas; j++){
+    let posGrad=vals[j]/maxGrad;
+    if(posGrad<0.5){
+      tab[j][i].style.color="rgb("+posGrad*510+",255,0)";
+    }
+    else{
+      tab[j][i].style.color="rgb(255,"+(1-posGrad)*510+",0)";
+    }
+  }
+}
+}
+    </script>
+  </body>
+</html>
